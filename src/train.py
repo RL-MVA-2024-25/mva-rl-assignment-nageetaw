@@ -2,7 +2,6 @@ from gymnasium.wrappers import TimeLimit
 from env_hiv import HIVPatient
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
-from tqdm import tqdm
 import joblib
 from datetime import datetime
 import torch
@@ -86,8 +85,8 @@ class ProjectAgent:
         
 
 
-    def run_episodes(self,env,episodes=1,e=0.1,disable_tqdm=False):
-        for e in tqdm(range(episodes),disable=disable_tqdm):
+    def run_episodes(self,env,episodes=1,e=0.1):
+        for e in range(episodes):
             state,_ = env.reset()
             done= False
             turncated= False
@@ -109,9 +108,9 @@ class ProjectAgent:
         return np.array(self.States), np.array(self.Actions).reshape((-1,1)) , np.array(self.Rewards), np.array(self.NextStates), np.array(self.Dones)
     
     
-    def initialize_buffer(self,env,disable_tqdm=False):
+    def initialize_buffer(self,env):
         s, _ = env.reset()
-        for _ in tqdm(range(self.buffer_size), disable=disable_tqdm):
+        for _ in range(self.buffer_size):
             a = env.action_space.sample()
             s2, r, done, trunc, _ = env.step(a)
             self.append_samples(s,a,r,s2,done)
@@ -122,12 +121,12 @@ class ProjectAgent:
 
            
         
-    def collect_and_train(self,env,iteration= 1000,disable_tqdm=False):
+    def collect_and_train(self,env,iteration= 1000):
         # initialize buffer with random policy
         self.initialize_buffer(env)
         print("Buffer size ",len(self.States))
         
-        for iter in tqdm(range(iteration), disable=disable_tqdm):
+        for iter in range(iteration):
             S,A,R,S2,D = self.get_samples()
             nb_samples = S.shape[0]
             SA = np.append(S,A,axis=1)
@@ -150,7 +149,7 @@ class ProjectAgent:
             # policy update
             self.Qfunction = Q
             # run an epidoe with new policy and stack the buffer, pop out old samples
-            self.run_episodes(env,episodes=1,e=0.1,disable_tqdm=True)
+            self.run_episodes(env,episodes=1,e=0.1)
 
         # save residuals and rewards
         np.savetxt("episode_rewards.csv", self.episode_rewards, delimiter=",", header="reward")
