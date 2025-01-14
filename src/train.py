@@ -3,7 +3,6 @@ from gymnasium.wrappers import TimeLimit
 from env_hiv import HIVPatient
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
-from tqdm import tqdm
 import joblib
 import math
 from datetime import datetime
@@ -90,8 +89,8 @@ class ProjectAgent:
 
 
 
-    def run_episodes(self,env,episodes=1,e=0.1,disable_tqdm=False):
-        for e in tqdm(range(episodes),disable=disable_tqdm):
+    def run_episodes(self,env,episodes=1,e=0.1):
+        for e in range(episodes):
             state,_ = env.reset()
             done= False
             turncated= False
@@ -108,10 +107,10 @@ class ProjectAgent:
             print(f"Episode reward:{total_reward}" )
             self.episode_rewards.append(total_reward)
 
-    def initialize_buffer(self, envoriments, disable_tqdm=False):
+    def initialize_buffer(self, envoriments):
         for env in envoriments:
             s, _ = env.reset()
-            for _ in tqdm(range(self.buffer_size // len(envoriments)), disable=disable_tqdm):
+            for _ in range(self.buffer_size // len(envoriments)):
                 a = env.action_space.sample()
                 s2, r, done, trunc, _ = env.step(a)
                 self.append_samples(s, a, r, s2, done)
@@ -120,13 +119,13 @@ class ProjectAgent:
                 else:
                     s = s2
 
-    def collect_and_train(self, envoriments, iteration=100, disable_tqdm=False):
+    def collect_and_train(self, envoriments, iteration=100):
         # initialize buffer with random policy
-        self.initialize_buffer(envoriments, disable_tqdm=disable_tqdm)
+        self.initialize_buffer(envoriments)
         
         # print("Buffer size ", len(self.States))
 
-        for iter in tqdm(range(iteration), disable=disable_tqdm):
+        for iter in range(iteration):
             S, A, R, S2, D = self.get_samples(iter)
             nb_samples = S.shape[0]
             SA = np.append(S, A, axis=1)
